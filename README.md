@@ -32,7 +32,7 @@ source api_env/bin/activate  # Mac
 pip install -r requirements.txt
 
 # Run the API
-python library/library.py
+python library.py
 ```
 
 ## How to Run Tests
