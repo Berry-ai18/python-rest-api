@@ -92,6 +92,8 @@ def test_post_book(base_url):
     data = response.json()
     assert 'Crazy' in data['title']
 
+    requests.delete(base_url + f"books/{data['id']}")
+
 # Should return 400 but API returns 500 — no input validation on POST endpoint
 def test_post_book_notitle(base_url):
     payload = {
