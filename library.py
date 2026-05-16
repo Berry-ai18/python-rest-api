@@ -19,7 +19,8 @@ class Author(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "nationality": self.nationality
+            "nationality": self.nationality,
+            "books": [book.to_dictionary() for book in self.books]
         }
 
 
@@ -71,6 +72,34 @@ def get_all_books():
 
     return jsonify([book.to_dictionary() for book in books])
 
+@app.route("/authors", methods = ["GET"])
+def get_all_authors():
+
+    name = request.args.get("name")
+    nationality = request.args.get("nationality")
+
+    if name and nationality:
+        authors = Author.query.filter_by(name = name, nationality = nationality).all()
+    elif name:
+        authors = Author.query.filter_by(name = name).all()
+    elif nationality:
+        authors = Author.query.filter_by(nationality = nationality).all()
+    else:
+        authors = Author.query.all()
+    
+    return jsonify([author.to_dictionary() for author in authors])
+
+# GET SPECIFIC AUTHOR
+@app.route("/authors/<int:author_id>", methods = ["GET"])
+def get_specific_author(author_id):
+
+    author = Author.query.get(author_id)
+
+    if author:
+        return jsonify(author.to_dictionary()), 200
+    else:
+        return jsonify({"Error message": "Author with this id doesnt exist"}), 404
+        
 
 # GET SPECIFIC BOOK BY ADDING ID
 @app.route("/books/<int:book_id>", methods = ["GET"])
@@ -80,6 +109,8 @@ def get_specific_book(book_id):
         return jsonify(book.to_dictionary())
     else:
         return jsonify({"Message": "Book with this id not found"}), 404
+    
+
     
 @app.route("/books", methods = ["GET"])
 def get_all_books():
@@ -92,6 +123,23 @@ def get_all_books():
         books = Book.query.all()
 
     return jsonify([book.to_dictionary() for book in books])
+
+
+@app.route("/authors", methods = ["POST"])
+def add_new_author():
+    
+    data = request.get_json()
+
+    if not all([data.get('name'),data.get('nationality')]):
+        return jsonify({"Error": "All fields are required"}), 400
+    
+    new_author = Author(name = data['name'],
+                        nationality = data['nationality'])
+    
+    db.session.add(new_author)
+    db.session.commit()
+
+    return jsonify(new_author.to_dictionary()), 201
 
 
 # ADD BOOK TO THE LIBRARY
@@ -137,6 +185,21 @@ def update_book(book_id):
     else:
         
         return jsonify({"Error message": "Book with this id doesnt exist"}), 404
+    
+# DELETE AUTHOR
+@app.route("/authors/<int:author_id>", methods = ["DELETE"])
+def delete_author(author_id):
+
+    author = Author.query.get(author_id)
+
+    if author:
+
+        db.session.delete(author)
+        db.session.commit()
+
+        return jsonify({"Success": "Successfully deleted an author"}), 200
+    else:
+        return jsonify({"Error message": "Author with this particular ID doesnt exist"}), 404
 
 # DELETE BOOK   
 @app.route("/books/<int:book_id>", methods = ["DELETE"])
@@ -149,7 +212,7 @@ def delete_book(book_id):
         db.session.delete(book)
         db.session.commit()
         
-        return jsonify({"Success": "Book was successfuly deleted"})
+        return jsonify({"Success": "Book was successfuly deleted"}), 200
     
     else:
         
