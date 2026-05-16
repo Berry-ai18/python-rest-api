@@ -92,7 +92,7 @@ def test_post_book(base_url):
     data = response.json()
     assert 'Crazy' in data['title']
 
-
+# Should return 400 but API returns 500 — no input validation on POST endpoint
 def test_post_book_notitle(base_url):
     payload = {
         'author': 'Pato',
@@ -126,6 +126,27 @@ def test_put_book(base_url, create_book):
     response = requests.put(base_url + f'books/{create_book}', json = payload)
     assert response.status_code == 200
 
+def test_put_book_norating(base_url, create_book):
+    payload = {
+        'title':'Crazy',
+        'author': 'Pato',
+        'genre':'drama',
+    }
+
+    response = requests.put(base_url + f'books/{create_book}', json = payload)
+    assert response.status_code == 400
+
+def test_put_book_invalidid(base_url):
+    payload = {
+        'title':'Crazy',
+        'author': 'Pato',
+        'genre':'drama',
+        'rating': '3.4'
+    }
+
+    response = requests.put(base_url + f'books/5059', json = payload)
+    assert response.status_code == 404
+
 
 def test_patch_method(base_url, create_book):
     response = requests.patch(base_url + f"books/{create_book}", json = {"title": "Hangover"})
@@ -134,3 +155,19 @@ def test_patch_method(base_url, create_book):
     assert 'title' in data
     assert 'Hangover' in data['title']
 
+def test_patch_method_invalid(base_url):
+    response = requests.patch(base_url + f"books/549045", json = {"title": "Hangover"})
+    assert response.status_code == 404
+
+def test_delete_book(base_url, create_book):
+    response = requests.delete(base_url + f'books/{create_book}')
+    assert response.status_code == 200
+
+    # Verify book is actually gone
+    verify = requests.get(base_url + f'books/{create_book}')
+    assert verify.status_code == 404
+
+
+def test_delete_book_invalidid(base_url):
+    response = requests.delete(base_url + f'books/40439')
+    assert response.status_code == 404
