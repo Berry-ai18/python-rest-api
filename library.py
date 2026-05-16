@@ -3,18 +3,35 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-# CREATE DATABASE\
+# CREATE DATABASE
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///library.db"
 
 db = SQLAlchemy(app)
 
+class Author(db.Model):
+
+    id = db.Column(db.Integer, primary_key = True)
+    name = db.Column(db.String, nullable = False)
+    nationality = db.Column(db.String, nullable = False)
+    books = db.relationship('Book', backref='author_obj')
+
+    def to_dictionary(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "nationality": self.nationality
+        }
+
+
 class Book(db.Model):
 
     id = db.Column(db.Integer, primary_key = True)
+    author_id = db.Column(db.Integer, db.ForeignKey('author.id'), nullable=True)
     title = db.Column(db.String(50), nullable = False)
     author = db.Column(db.String(50), nullable = False)
     genre = db.Column(db.String(50), nullable = False)
     rating = db.Column(db.Float, nullable = False)
+    
 
     def to_dictionary(self):
         return {
@@ -25,6 +42,7 @@ class Book(db.Model):
             "rating": self.rating
         }
     
+
 with app.app_context():
     db.create_all()
 
@@ -40,14 +58,18 @@ def home():
 def get_all_books():
 
     title = request.args.get("title")
+    genre = request.args.get("genre")
 
-    if title:
+    if title and genre:
+        books = Book.query.filter_by(title=title, genre=genre).all()
+    elif title:
         books = Book.query.filter_by(title=title).all()
+    elif genre:
+        books = Book.query.filter_by(genre=genre).all()
     else:
         books = Book.query.all()
-        
-    return jsonify([book.to_dictionary() for book in books])
 
+    return jsonify([book.to_dictionary() for book in books])
 
 
 # GET SPECIFIC BOOK BY ADDING ID
