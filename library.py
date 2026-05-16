@@ -108,21 +108,7 @@ def get_specific_book(book_id):
     if book:
         return jsonify(book.to_dictionary())
     else:
-        return jsonify({"Message": "Book with this id not found"}), 404
-    
-
-    
-@app.route("/books", methods = ["GET"])
-def get_all_books():
-
-    genre = request.args.get("genre")
-
-    if genre:
-        books = Book.query.filter_by(genre=genre).all()
-    else:
-        books = Book.query.all()
-
-    return jsonify([book.to_dictionary() for book in books])
+        return jsonify({"Message": "Book with this id not found"}), 404 
 
 
 @app.route("/authors", methods = ["POST"])
