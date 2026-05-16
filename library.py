@@ -38,8 +38,16 @@ def home():
 # GET ALL BOOKS
 @app.route("/books", methods = ["GET"])
 def get_all_books():
-    books = Book.query.all()
+
+    title = request.args.get("title")
+
+    if title:
+        books = Book.query.filter_by(title=title).all()
+    else:
+        books = Book.query.all()
+        
     return jsonify([book.to_dictionary() for book in books])
+
 
 
 # GET SPECIFIC BOOK BY ADDING ID
@@ -50,12 +58,27 @@ def get_specific_book(book_id):
         return jsonify(book.to_dictionary())
     else:
         return jsonify({"Message": "Book with this id not found"}), 404
+    
+@app.route("/books", methods = ["GET"])
+def get_all_books():
+
+    genre = request.args.get("genre")
+
+    if genre:
+        books = Book.query.filter_by(genre=genre).all()
+    else:
+        books = Book.query.all()
+
+    return jsonify([book.to_dictionary() for book in books])
 
 
 # ADD BOOK TO THE LIBRARY
 @app.route("/books", methods = ["POST"])
 def add_new_book():
     data = request.get_json()
+
+    if not all([data.get("title"), data.get("author"), data.get("genre"), data.get("rating")]):
+        return jsonify({"error": "All fields are required"}), 400
 
     new_book = Book(title = data["title"],
                     author = data["author"],

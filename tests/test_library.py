@@ -94,7 +94,7 @@ def test_post_book(base_url):
 
     requests.delete(base_url + f"books/{data['id']}")
 
-# Should return 400 but API returns 500 — no input validation on POST endpoint
+
 def test_post_book_notitle(base_url):
     payload = {
         'author': 'Pato',
@@ -103,7 +103,7 @@ def test_post_book_notitle(base_url):
     }
 
     response = requests.post(base_url + 'books', json = payload)
-    assert response.status_code == 500
+    assert response.status_code == 400
 
 def test_post_book_incorrect_rating(base_url):
     payload = {
@@ -114,7 +114,7 @@ def test_post_book_incorrect_rating(base_url):
     }
 
     response = requests.post(base_url + 'books', json = payload)
-    assert response.status_code == 500
+    assert response.status_code == 400
 
 
 def test_put_book(base_url, create_book):
