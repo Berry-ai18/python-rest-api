@@ -1,42 +1,6 @@
 import pytest
 import requests
 
-@pytest.fixture
-def base_url():
-    return "http://127.0.0.1:5000/"
-
-@pytest.fixture
-def create_book(base_url):
-    payload = {
-        "title": "The Hobbit",
-        "author": "J.R.R. Tolkien",
-        "genre": "Fantasy",
-        "rating": 4.8
-    }
-    response = requests.post(base_url + "books", json=payload)
-    book_id = response.json()["id"]
-    
-    yield book_id
-
-    requests.delete(base_url + f"books/{book_id}")
-
-@pytest.fixture
-def create_books(base_url):
-    books = [
-        {"title": "The Hobbit", "author": "J.R.R. Tolkien", "genre": "Fantasy", "rating": 4.8},
-        {"title": "1984", "author": "George Orwell", "genre": "Dystopian", "rating": 4.7},
-        {"title": "Clean Code", "author": "Robert C. Martin", "genre": "Programming", "rating": 4.5}
-    ]
-    ids = []
-    for book in books:
-        response = requests.post(base_url + "books", json=book)
-        ids.append(response.json()["id"])
-
-    yield ids
-    
-    for book_id in ids:
-        requests.delete(base_url + f"books/{book_id}")
-
 
 # GET ALL BOOKS 
 def test_get_all_books(base_url, create_books):
@@ -173,3 +137,42 @@ def test_delete_book(base_url, create_book):
 def test_delete_book_invalidid(base_url):
     response = requests.delete(base_url + f'books/40439')
     assert response.status_code == 404
+
+def test_get_all_authors(base_url, create_author):
+    response = requests.get(base_url + "authors")
+    assert response.status_code == 200
+    assert len(response.json()) > 0
+
+def test_get_one_author(base_url,create_author):
+    response = requests.get(base_url + f"authors/{create_author}")
+    assert response.status_code == 200
+    assert 'name' in response.json()
+    assert 'nationality' in response.json()
+
+def test_get_invalid_author_id(base_url, create_author):
+    response = requests.get(base_url + "authors/90999")
+    assert response.status_code == 404
+
+def test_create_author(base_url):
+    response = requests.post(base_url + "authors", json = {"name": "Maria Razusova Martakova", "nationality": "Slovakia"})
+    assert response.status_code == 201
+    data = response.json()
+    assert 'name' in data
+    assert 'nationality' in data
+    requests.delete(base_url + f"authors/{data['id']}")
+
+def test_create_author_no_name(base_url):
+    response = requests.post(base_url + "authors", json = {"name": "Palo Habera"})
+    assert response.status_code == 400
+
+def test_delete_author(base_url, create_author):
+    response = requests.delete(base_url + f"authors/{create_author}")
+    assert response.status_code == 200
+    verify = requests.get(base_url + f'authors/{create_author}')
+    assert verify.status_code == 404
+
+def test_delete_author_wrongid(base_url):
+    response = requests.delete(base_url + "authors/49949")
+    assert response.status_code == 404
+
+
