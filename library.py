@@ -119,6 +119,7 @@ def add_new_author():
     if not all([data.get('name'),data.get('nationality')]):
         return jsonify({"Error": "All fields are required"}), 400
     
+    
     new_author = Author(name = data['name'],
                         nationality = data['nationality'])
     
@@ -135,11 +136,16 @@ def add_new_book():
 
     if not all([data.get("title"), data.get("author"), data.get("genre"), data.get("rating")]):
         return jsonify({"error": "All fields are required"}), 400
+    
+    try:
+        rating = float(data.get("rating"))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Rating must be a number"}), 400
 
     new_book = Book(title = data["title"],
                     author = data["author"],
                     genre = data["genre"],
-                    rating = data["rating"])
+                    rating = rating)
 
     db.session.add(new_book)
     db.session.commit()
